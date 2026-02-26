@@ -1,0 +1,5 @@
+[workspace]
+# Publish all crates in dependency order.
+# release-plz resolves the correct order automatically.
+changelog_update = true
+git_release_enable = true

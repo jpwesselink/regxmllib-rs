@@ -12,5 +12,5 @@ keywords     = ["smpte", "mxf", "klv", "ber", "st336"]
 categories   = ["encoding", "multimedia", "parser-implementations"]
 
 [dependencies]
-smpte-types = { path = "../smpte-types" }
+smpte-types = { path = "../smpte-types", version = "0.1.0" }
 thiserror   = { workspace = true }
