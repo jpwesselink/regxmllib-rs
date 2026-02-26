@@ -1,6 +1,6 @@
 {
   "name": "regxmllib-rs-darwin-arm64",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Prebuilt regxmllib-rs binary for darwin-arm64",
   "license": "MIT",
   "os": [
@@ -11,8 +11,5 @@
   ],
   "files": [
     "bin"
-  ],
-  "bin": {
-    "regxmllib-rs": "bin/regxmllib-rs"
-  }
+  ]
 }
