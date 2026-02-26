@@ -1,0 +1,15 @@
+{
+  "name": "regxmllib-rs-npm-workspace",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "stage": "node ./scripts/stage-binary.ts",
+    "check": "node ./scripts/check-packages.ts",
+    "local-publish": "node ./scripts/local-publish.ts",
+    "local-publish:publish": "node ./scripts/local-publish.ts --publish",
+    "test-local": "node ./scripts/test-local.ts"
+  }
+}

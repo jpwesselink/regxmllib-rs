@@ -1,0 +1,179 @@
+name: Publish npm packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Pack packages but do not publish"
+        type: boolean
+        required: true
+        default: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+permissions:
+  contents: read
+
+jobs:
+  build-linux:
+    name: Build Linux binaries
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            artifact: linux-x64
+          - target: aarch64-unknown-linux-gnu
+            artifact: linux-arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install aarch64 Linux linker
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Build regxmllib
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+        run: cargo build -p regxmllib-cli --bin regxmllib-rs --release --target ${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: target/${{ matrix.target }}/release/regxmllib-rs
+
+  build-macos:
+    name: Build macOS binaries
+    strategy:
+      matrix:
+        include:
+          - runner: macos-13
+            target: x86_64-apple-darwin
+            artifact: darwin-x64
+          - runner: macos-14
+            target: aarch64-apple-darwin
+            artifact: darwin-arm64
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Build regxmllib
+        run: cargo build -p regxmllib-cli --bin regxmllib-rs --release --target ${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: target/${{ matrix.target }}/release/regxmllib-rs
+
+  build-windows:
+    name: Build Windows binaries
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-pc-windows-msvc
+            artifact: win32-x64
+          - target: aarch64-pc-windows-msvc
+            artifact: win32-arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Build regxmllib
+        shell: pwsh
+        run: cargo build -p regxmllib-cli --bin regxmllib-rs --release --target ${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: target/${{ matrix.target }}/release/regxmllib-rs.exe
+
+  publish:
+    name: Publish npm packages
+    runs-on: ubuntu-latest
+    needs: [build-linux, build-macos, build-windows]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+          registry-url: https://registry.npmjs.org
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/regxmllib-artifacts
+
+      - name: Stage binaries into npm packages
+        run: |
+          cd npm
+          node ./scripts/stage-binary.ts --target=darwin-arm64 --source=/tmp/regxmllib-artifacts/darwin-arm64/regxmllib-rs
+          node ./scripts/stage-binary.ts --target=darwin-x64 --source=/tmp/regxmllib-artifacts/darwin-x64/regxmllib-rs
+          node ./scripts/stage-binary.ts --target=linux-arm64 --source=/tmp/regxmllib-artifacts/linux-arm64/regxmllib-rs
+          node ./scripts/stage-binary.ts --target=linux-x64 --source=/tmp/regxmllib-artifacts/linux-x64/regxmllib-rs
+          node ./scripts/stage-binary.ts --target=win32-arm64 --source=/tmp/regxmllib-artifacts/win32-arm64/regxmllib-rs.exe
+          node ./scripts/stage-binary.ts --target=win32-x64 --source=/tmp/regxmllib-artifacts/win32-x64/regxmllib-rs.exe
+
+      - name: Validate package manifests
+        run: |
+          cd npm
+          node ./scripts/check-packages.ts
+
+      - name: Dry-run pack all packages
+        if: inputs.dry_run
+        run: |
+          cd npm
+          npm pack ./regxmllib-rs-darwin-x64
+          npm pack ./regxmllib-rs-darwin-arm64
+          npm pack ./regxmllib-rs-linux-x64
+          npm pack ./regxmllib-rs-linux-arm64
+          npm pack ./regxmllib-rs-win32-x64
+          npm pack ./regxmllib-rs-win32-arm64
+          npm pack ./regxmllib-rs
+
+      - name: Publish platform packages
+        if: ${{ !inputs.dry_run }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd npm
+          npm publish ./regxmllib-rs-darwin-x64 --access public
+          npm publish ./regxmllib-rs-darwin-arm64 --access public
+          npm publish ./regxmllib-rs-linux-x64 --access public
+          npm publish ./regxmllib-rs-linux-arm64 --access public
+          npm publish ./regxmllib-rs-win32-x64 --access public
+          npm publish ./regxmllib-rs-win32-arm64 --access public
+
+      - name: Publish launcher package
+        if: ${{ !inputs.dry_run }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd npm
+          npm publish ./regxmllib-rs --access public

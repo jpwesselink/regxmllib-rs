@@ -1,0 +1,17 @@
+[package]
+name             = "smpte-types"
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+homepage.workspace     = true
+authors.workspace      = true
+description  = "SMPTE primitive types: UL, AUID, UUID, UMID, HalfFloat"
+keywords     = ["smpte", "mxf", "regxml", "ul", "auid"]
+categories   = ["encoding", "multimedia"]
+
+[dependencies]
+thiserror = { workspace = true }
+uuid      = { workspace = true }
+half      = { workspace = true }

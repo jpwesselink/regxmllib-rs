@@ -1,0 +1,17 @@
+[package]
+name             = "smpte-mxf"
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+homepage.workspace     = true
+authors.workspace      = true
+description  = "SMPTE ST 377-1 MXF partition packs, primer packs, RIP parsing and file seeking"
+keywords     = ["smpte", "mxf", "st377", "partition", "primer"]
+categories   = ["encoding", "multimedia", "parser-implementations"]
+
+[dependencies]
+smpte-types = { path = "../smpte-types" }
+smpte-klv   = { path = "../smpte-klv" }
+thiserror   = { workspace = true }

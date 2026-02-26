@@ -1,0 +1,26 @@
+# Rust
+/target/
+Cargo.lock
+
+# npm
+npm/node_modules/
+npm/regxmllib-rs-*/node_modules/
+npm/regxmllib-rs/node_modules/
+npm/**/*.tgz
+
+# npm platform binaries (staged by CI or local-publish, not committed)
+npm/**/bin/regxmllib-rs
+npm/**/bin/regxmllib-rs.exe
+
+# Test output
+/out/
+/metadict.xml
+
+# Claude Code local settings
+.claude/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,8 @@
+packages:
+  - regxmllib-rs
+  - regxmllib-rs-darwin-x64
+  - regxmllib-rs-darwin-arm64
+  - regxmllib-rs-linux-x64
+  - regxmllib-rs-linux-arm64
+  - regxmllib-rs-win32-x64
+  - regxmllib-rs-win32-arm64

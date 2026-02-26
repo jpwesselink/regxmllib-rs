@@ -1,0 +1,16 @@
+[package]
+name             = "smpte-klv"
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+homepage.workspace     = true
+authors.workspace      = true
+description  = "SMPTE ST 336 KLV triplets, BER length decoding, local sets"
+keywords     = ["smpte", "mxf", "klv", "ber", "st336"]
+categories   = ["encoding", "multimedia", "parser-implementations"]
+
+[dependencies]
+smpte-types = { path = "../smpte-types" }
+thiserror   = { workspace = true }

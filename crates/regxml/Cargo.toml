@@ -1,0 +1,22 @@
+[package]
+name             = "regxml"
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+homepage.workspace     = true
+authors.workspace      = true
+description  = "SMPTE ST 2001-1 RegXML fragment builder and XSD schema generator for MXF metadata"
+keywords     = ["smpte", "regxml", "mxf", "st2001", "xml"]
+categories   = ["encoding", "multimedia"]
+
+[dependencies]
+smpte-types = { path = "../smpte-types" }
+smpte-klv   = { path = "../smpte-klv" }
+smpte-mxf   = { path = "../smpte-mxf" }
+regxml-dict = { path = "../regxml-dict" }
+thiserror   = { workspace = true }
+quick-xml   = { workspace = true }
+encoding_rs = { workspace = true }
+half        = { workspace = true }

@@ -1,0 +1,30 @@
+[package]
+name             = "regxmllib-cli"
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+homepage.workspace     = true
+authors.workspace      = true
+description  = "Java-free RegXML CLI toolchain — drop-in replacement for sandflow/regxmllib"
+keywords     = ["smpte", "regxml", "mxf", "cli", "st2001"]
+categories   = ["command-line-utilities", "multimedia"]
+
+[[bin]]
+name = "regxmllib-rs"
+path = "src/bin/regxmllib_rs.rs"
+
+[dependencies]
+smpte-types = { path = "../smpte-types" }
+smpte-klv   = { path = "../smpte-klv" }
+smpte-mxf   = { path = "../smpte-mxf" }
+regxml-dict = { path = "../regxml-dict" }
+regxml      = { path = "../regxml" }
+clap        = { workspace = true }
+anyhow      = { workspace = true }
+tracing     = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+[dev-dependencies]
+quick-xml = { workspace = true }

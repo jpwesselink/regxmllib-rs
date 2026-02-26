@@ -1,0 +1,42 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .: {}
+
+  regxmllib-rs:
+    optionalDependencies:
+      regxmllib-rs-darwin-arm64:
+        specifier: workspace:*
+        version: link:../regxmllib-rs-darwin-arm64
+      regxmllib-rs-darwin-x64:
+        specifier: workspace:*
+        version: link:../regxmllib-rs-darwin-x64
+      regxmllib-rs-linux-arm64:
+        specifier: workspace:*
+        version: link:../regxmllib-rs-linux-arm64
+      regxmllib-rs-linux-x64:
+        specifier: workspace:*
+        version: link:../regxmllib-rs-linux-x64
+      regxmllib-rs-win32-arm64:
+        specifier: workspace:*
+        version: link:../regxmllib-rs-win32-arm64
+      regxmllib-rs-win32-x64:
+        specifier: workspace:*
+        version: link:../regxmllib-rs-win32-x64
+
+  regxmllib-rs-darwin-arm64: {}
+
+  regxmllib-rs-darwin-x64: {}
+
+  regxmllib-rs-linux-arm64: {}
+
+  regxmllib-rs-linux-x64: {}
+
+  regxmllib-rs-win32-arm64: {}
+
+  regxmllib-rs-win32-x64: {}

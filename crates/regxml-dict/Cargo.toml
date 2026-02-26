@@ -1,0 +1,19 @@
+[package]
+name             = "regxml-dict"
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+license.workspace      = true
+repository.workspace   = true
+homepage.workspace     = true
+authors.workspace      = true
+description  = "SMPTE ST 335/395 register XML import, metadictionary, and definition resolver"
+keywords     = ["smpte", "regxml", "mxf", "metadictionary", "st2001"]
+categories   = ["encoding", "multimedia", "parser-implementations"]
+
+[dependencies]
+smpte-types = { path = "../smpte-types" }
+thiserror   = { workspace = true }
+quick-xml   = { workspace = true }
+serde       = { workspace = true }
+roxmltree   = { workspace = true }
