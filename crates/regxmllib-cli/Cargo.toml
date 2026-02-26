@@ -10,6 +10,7 @@ authors.workspace      = true
 description  = "Java-free RegXML CLI toolchain — drop-in replacement for sandflow/regxmllib"
 keywords     = ["smpte", "regxml", "mxf", "cli", "st2001"]
 categories   = ["command-line-utilities", "multimedia"]
+include      = ["src/**", "registers/**"]
 
 [[bin]]
 name = "regxmllib-rs"

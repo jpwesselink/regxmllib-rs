@@ -53,8 +53,8 @@ enum Command {
         group(ArgGroup::new("partition").required(true).args(["header", "footer", "auto"]))
     )]
     RegxmlDump {
-        /// Dictionary directory or register XML files (Elements.xml, Groups.xml, Types.xml)
-        #[arg(short = 'd', long, num_args = 1.., value_name = "PATH", required = true)]
+        /// Dictionary directory or register XML files (default: embedded SMPTE registers)
+        #[arg(short = 'd', long, num_args = 1.., value_name = "PATH")]
         dict: Vec<PathBuf>,
 
         /// Labels register XML file(s) for ExtendibleEnumeration symbol resolution
@@ -125,8 +125,8 @@ enum Command {
         about = "Generate an XSD schema from a compiled RegXML metadictionary"
     )]
     GenDictXsd {
-        /// Compiled metadictionary XML file(s) (output of XMLRegistersToDict)
-        #[arg(short = 'd', long, num_args = 1.., value_name = "PATH", required = true)]
+        /// Compiled metadictionary XML file(s) (default: built from embedded SMPTE registers)
+        #[arg(short = 'd', long, num_args = 1.., value_name = "PATH")]
         dict: Vec<PathBuf>,
 
         /// Output directory or file (directory → writes schema.xsd inside it)

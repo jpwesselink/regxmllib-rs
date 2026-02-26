@@ -9,6 +9,13 @@ use regxml::{
 use regxml_dict::{importer::import_registers, LabelsRegister, MetaDictionary};
 use smpte_types::Auid;
 
+// ── Embedded SMPTE registers ──────────────────────────────────────────────────
+
+const EMBEDDED_ELEMENTS: &[u8] = include_bytes!("../registers/Elements.xml");
+const EMBEDDED_GROUPS:   &[u8] = include_bytes!("../registers/Groups.xml");
+const EMBEDDED_TYPES:    &[u8] = include_bytes!("../registers/Types.xml");
+const EMBEDDED_LABELS:   &[u8] = include_bytes!("../registers/Labels.xml");
+
 // ── LabelsNamer ───────────────────────────────────────────────────────────────
 
 /// Wraps a [`LabelsRegister`] as an [`AuidNamer`] for use in
@@ -64,22 +71,31 @@ pub fn run_regxml_dump(
     partition: PartitionTarget,
     root_mode: RootMode,
 ) -> Result<()> {
-    // Expand any directory arguments.
-    let dict_paths = expand_dict_paths(dict_paths)?;
-    let label_paths = expand_dict_paths(label_paths)?;
-
-    // Load dictionary from register XML files.
-    let xml_bytes: Vec<Vec<u8>> = dict_paths
-        .iter()
-        .map(|path| std::fs::read(path).with_context(|| format!("reading {path:?}")))
-        .collect::<Result<_>>()?;
-    let slices: Vec<&[u8]> = xml_bytes.iter().map(|bytes| bytes.as_slice()).collect();
-    let dict = import_registers(&slices).context("importing SMPTE register XMLs")?;
+    // Load dictionary: use embedded SMPTE registers if no -d provided.
+    let dict = if dict_paths.is_empty() {
+        tracing::debug!("using embedded SMPTE registers");
+        import_registers(&[EMBEDDED_ELEMENTS, EMBEDDED_GROUPS, EMBEDDED_TYPES])
+            .context("loading embedded SMPTE registers")?
+    } else {
+        let paths = expand_dict_paths(dict_paths)?;
+        let xml_bytes: Vec<Vec<u8>> = paths
+            .iter()
+            .map(|path| std::fs::read(path).with_context(|| format!("reading {path:?}")))
+            .collect::<Result<_>>()?;
+        let slices: Vec<&[u8]> = xml_bytes.iter().map(|bytes| bytes.as_slice()).collect();
+        import_registers(&slices).context("importing SMPTE register XMLs")?
+    };
 
     tracing::debug!(defs = dict.definition_count(), "dictionary loaded");
 
-    // Load labels for ExtendibleEnumeration resolution (optional).
-    let auid_namer: Option<Box<dyn AuidNamer>> = if !label_paths.is_empty() {
+    // Load labels: use embedded Labels.xml if no -l provided.
+    let auid_namer: Option<Box<dyn AuidNamer>> = if label_paths.is_empty() {
+        tracing::debug!("using embedded SMPTE labels");
+        let reg = LabelsRegister::from_xml(EMBEDDED_LABELS)
+            .context("loading embedded SMPTE labels")?;
+        Some(Box::new(LabelsNamer(reg)))
+    } else {
+        let label_paths = expand_dict_paths(label_paths)?;
         let mut merged = LabelsRegister::empty();
         for path in &label_paths {
             let xml = std::fs::read(path).with_context(|| format!("reading labels {path:?}"))?;
@@ -89,8 +105,6 @@ pub fn run_regxml_dump(
         }
         tracing::debug!(entries = merged.len(), "labels register loaded");
         Some(Box::new(LabelsNamer(merged)))
-    } else {
-        None
     };
 
     let file = File::open(input).with_context(|| format!("opening MXF file {input:?}"))?;
@@ -158,27 +172,35 @@ pub fn run_xml_registers_to_dict(inputs: &[PathBuf], output: &Path) -> Result<()
     Ok(())
 }
 
-/// Generate an XSD schema from compiled metadictionary files.
+/// Generate an XSD schema from compiled metadictionary files, or from the
+/// embedded SMPTE registers if no `-d` is provided.
 ///
 /// `output` may be a directory (writes `schema.xsd` inside it, Java compat)
 /// or a file path.
 pub fn run_gen_dict_xsd(dict_paths: &[PathBuf], output: &Path) -> Result<()> {
     let output = resolve_output(output, "schema.xsd");
-    let mut merged = MetaDictionary::new("", "");
-    for path in dict_paths {
-        let xml = std::fs::read(path).with_context(|| format!("reading {path:?}"))?;
-        let dict = MetaDictionary::from_xml(&xml)
-            .with_context(|| format!("parsing metadictionary {path:?}"))?;
-        for definition in dict.all_definitions() {
-            merged.add(definition.clone()).ok();
-        }
-    }
 
-    eprintln!(
-        "Loaded {} definitions from {} metadictionary file(s)",
-        merged.definition_count(),
-        dict_paths.len()
-    );
+    let merged = if dict_paths.is_empty() {
+        tracing::debug!("using embedded SMPTE registers for XSD generation");
+        import_registers(&[EMBEDDED_ELEMENTS, EMBEDDED_GROUPS, EMBEDDED_TYPES])
+            .context("loading embedded SMPTE registers")?
+    } else {
+        let mut merged = MetaDictionary::new("", "");
+        for path in dict_paths {
+            let xml = std::fs::read(path).with_context(|| format!("reading {path:?}"))?;
+            let dict = MetaDictionary::from_xml(&xml)
+                .with_context(|| format!("parsing metadictionary {path:?}"))?;
+            for definition in dict.all_definitions() {
+                merged.add(definition.clone()).ok();
+            }
+        }
+        eprintln!(
+            "Loaded {} definitions from {} metadictionary file(s)",
+            merged.definition_count(),
+            dict_paths.len()
+        );
+        merged
+    };
 
     let out = File::create(&output).with_context(|| format!("creating {output:?}"))?;
     let mut writer = BufWriter::new(out);
