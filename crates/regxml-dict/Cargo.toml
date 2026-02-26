@@ -12,7 +12,7 @@ keywords     = ["smpte", "regxml", "mxf", "metadictionary", "st2001"]
 categories   = ["encoding", "multimedia", "parser-implementations"]
 
 [dependencies]
-smpte-types = { path = "../smpte-types", version = "0.1.0" }
+smpte-types = { path = "../smpte-types", version = "0.1.1" }
 thiserror   = { workspace = true }
 quick-xml   = { workspace = true }
 serde       = { workspace = true }

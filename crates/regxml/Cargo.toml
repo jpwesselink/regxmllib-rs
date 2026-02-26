@@ -12,10 +12,10 @@ keywords     = ["smpte", "regxml", "mxf", "st2001", "xml"]
 categories   = ["encoding", "multimedia"]
 
 [dependencies]
-smpte-types = { path = "../smpte-types", version = "0.1.0" }
-smpte-klv   = { path = "../smpte-klv",   version = "0.1.0" }
-smpte-mxf   = { path = "../smpte-mxf",   version = "0.1.0" }
-regxml-dict = { path = "../regxml-dict", version = "0.1.0" }
+smpte-types = { path = "../smpte-types", version = "0.1.1" }
+smpte-klv   = { path = "../smpte-klv",   version = "0.1.1" }
+smpte-mxf   = { path = "../smpte-mxf",   version = "0.1.1" }
+regxml-dict = { path = "../regxml-dict", version = "0.1.1" }
 thiserror   = { workspace = true }
 quick-xml   = { workspace = true }
 encoding_rs = { workspace = true }

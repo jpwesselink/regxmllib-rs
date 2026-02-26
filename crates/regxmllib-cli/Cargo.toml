@@ -17,11 +17,11 @@ name = "regxmllib-rs"
 path = "src/bin/regxmllib_rs.rs"
 
 [dependencies]
-smpte-types = { path = "../smpte-types", version = "0.1.0" }
-smpte-klv   = { path = "../smpte-klv",   version = "0.1.0" }
-smpte-mxf   = { path = "../smpte-mxf",   version = "0.1.0" }
-regxml-dict = { path = "../regxml-dict", version = "0.1.0" }
-regxml      = { path = "../regxml",      version = "0.1.0" }
+smpte-types = { path = "../smpte-types", version = "0.1.1" }
+smpte-klv   = { path = "../smpte-klv",   version = "0.1.1" }
+smpte-mxf   = { path = "../smpte-mxf",   version = "0.1.1" }
+regxml-dict = { path = "../regxml-dict", version = "0.1.1" }
+regxml      = { path = "../regxml",      version = "0.1.1" }
 clap        = { workspace = true }
 anyhow      = { workspace = true }
 tracing     = { workspace = true }
