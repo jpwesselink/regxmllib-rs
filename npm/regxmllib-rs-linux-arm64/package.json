@@ -1,6 +1,6 @@
 {
   "name": "regxmllib-rs-linux-arm64",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Prebuilt regxmllib-rs binary for linux-arm64",
   "license": "MIT",
   "os": [
