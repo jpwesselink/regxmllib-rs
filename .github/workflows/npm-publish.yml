@@ -14,7 +14,6 @@ env:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   build-linux:
@@ -160,17 +159,21 @@ jobs:
 
       - name: Publish platform packages
         if: ${{ !inputs.dry_run }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cd npm
-          npm publish ./regxmllib-rs-darwin-x64 --access public --provenance
-          npm publish ./regxmllib-rs-darwin-arm64 --access public --provenance
-          npm publish ./regxmllib-rs-linux-x64 --access public --provenance
-          npm publish ./regxmllib-rs-linux-arm64 --access public --provenance
-          npm publish ./regxmllib-rs-win32-x64 --access public --provenance
-          npm publish ./regxmllib-rs-win32-arm64 --access public --provenance
+          npm publish ./regxmllib-rs-darwin-x64 --access public
+          npm publish ./regxmllib-rs-darwin-arm64 --access public
+          npm publish ./regxmllib-rs-linux-x64 --access public
+          npm publish ./regxmllib-rs-linux-arm64 --access public
+          npm publish ./regxmllib-rs-win32-x64 --access public
+          npm publish ./regxmllib-rs-win32-arm64 --access public
 
       - name: Publish launcher package
         if: ${{ !inputs.dry_run }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cd npm
-          npm publish ./regxmllib-rs --access public --provenance
+          npm publish ./regxmllib-rs --access public
