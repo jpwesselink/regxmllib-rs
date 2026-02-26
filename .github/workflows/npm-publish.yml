@@ -167,8 +167,8 @@ jobs:
           npm publish ./regxmllib-rs-darwin-arm64 --access public
           npm publish ./regxmllib-rs-linux-x64 --access public
           npm publish ./regxmllib-rs-linux-arm64 --access public
-          npm publish ./regxmllib-rs-win32-x64 --access public
-          npm publish ./regxmllib-rs-win32-arm64 --access public
+          npm publish ./regxmllib-rs-win32-x64 --access public || echo "win32-x64 blocked by npm spam filter — publish manually once unblocked"
+          npm publish ./regxmllib-rs-win32-arm64 --access public || echo "win32-arm64 blocked by npm spam filter — publish manually once unblocked"
 
       - name: Publish launcher package
         if: ${{ !inputs.dry_run }}
