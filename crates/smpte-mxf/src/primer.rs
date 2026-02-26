@@ -10,8 +10,7 @@ use crate::MxfError;
 
 /// Primer Pack key (SMPTE ST 377-1 §8.1).
 const KEY: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x02, 0x05, 0x01, 0x01,
-    0x0D, 0x01, 0x02, 0x01, 0x01, 0x05, 0x01, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x02, 0x05, 0x01, 0x01, 0x0D, 0x01, 0x02, 0x01, 0x01, 0x05, 0x01, 0x00,
 ];
 
 /// MXF Primer Pack — maps 2-byte local tags to ULs (SMPTE ST 377-1 §8.1).
@@ -38,7 +37,7 @@ impl PrimerPack {
         let mut c = Cursor::new(triplet.value.as_slice());
 
         let item_count = read_u32_be(&mut c)? as usize;
-        let _item_len  = read_u32_be(&mut c)?; // expected to be 18 (2 + 16)
+        let _item_len = read_u32_be(&mut c)?; // expected to be 18 (2 + 16)
 
         let mut register = LocalTagRegister::with_capacity(item_count);
         for _ in 0..item_count {
@@ -48,6 +47,8 @@ impl PrimerPack {
             register.insert(local_tag, Ul::from_bytes(ul_bytes));
         }
 
-        Ok(Some(PrimerPack { local_tag_register: register }))
+        Ok(Some(PrimerPack {
+            local_tag_register: register,
+        }))
     }
 }

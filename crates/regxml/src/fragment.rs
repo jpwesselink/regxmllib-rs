@@ -5,14 +5,12 @@ use quick_xml::{
     events::{BytesEnd, BytesStart, BytesText, Event},
     Writer,
 };
-use smpte_klv::LocalSet;
-use smpte_types::{Auid, Ul};
 use regxml_dict::{
-    definition::{
-        ClassDefinition, Definition, PropertyDefinition, TypeDefinition,
-    },
+    definition::{ClassDefinition, Definition, PropertyDefinition, TypeDefinition},
     DefinitionResolver,
 };
+use smpte_klv::LocalSet;
+use smpte_types::{Auid, Ul};
 
 use crate::{
     event::{EventCode, EventHandlerDecision, EventSeverity, FragmentEvent},
@@ -30,106 +28,89 @@ pub const REG_PREFIX: &str = "reg";
 
 // InstanceID property (SMPTE ST 335 §8.1): 060e2b34.01010101.01011502.00000000
 const INSTANCE_UID_UL: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x01, 0x01, 0x15, 0x02, 0x00, 0x00, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x15, 0x02, 0x00, 0x00, 0x00, 0x00,
 ];
 
 // ByteOrder property: 060e2b34.01010101.03010201.02000000
 const BYTE_ORDER_UL: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x03, 0x01, 0x02, 0x01, 0x02, 0x00, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01, 0x03, 0x01, 0x02, 0x01, 0x02, 0x00, 0x00, 0x00,
 ];
 
 // PrimaryPackage property: 060e2b34.01010104.06010104.01080000
 const PRIMARY_PACKAGE_UL: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x04,
-    0x06, 0x01, 0x01, 0x04, 0x01, 0x08, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x04, 0x06, 0x01, 0x01, 0x04, 0x01, 0x08, 0x00, 0x00,
 ];
 
 // LinkedGenerationID property: 060e2b34.01010102.05200701.08000000
 const LINKED_GENERATION_ID_UL: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x05, 0x20, 0x07, 0x01, 0x08, 0x00, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02, 0x05, 0x20, 0x07, 0x01, 0x08, 0x00, 0x00, 0x00,
 ];
 
 // GenerationID property: 060e2b34.01010102.05200701.01000000
 const GENERATION_ID_UL: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x05, 0x20, 0x07, 0x01, 0x01, 0x00, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02, 0x05, 0x20, 0x07, 0x01, 0x01, 0x00, 0x00, 0x00,
 ];
 
 // ApplicationProductID property: 060e2b34.01010102.05200701.07000000
 const APPLICATION_PRODUCT_ID_UL: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x05, 0x20, 0x07, 0x01, 0x07, 0x00, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02, 0x05, 0x20, 0x07, 0x01, 0x07, 0x00, 0x00, 0x00,
 ];
 
 // Type ULs used in Record special-casing (applyRule5_8):
 // AUID type: 060e2b34.01040101.01030100.00000000
 const AUID_TYPE_UL: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01,
-    0x01, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01, 0x01, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
 ];
 
 // UUID type: 060e2b34.01040101.01030300.00000000
 const UUID_TYPE_UL: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01,
-    0x01, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01, 0x01, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00,
 ];
 
 // PackageIDType: 060e2b34.01040101.01030200.00000000
 const PACKAGE_ID_TYPE_UL: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01,
-    0x01, 0x03, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01, 0x01, 0x03, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00,
 ];
 
 // Rational: 060e2b34.01040101.03010100.00000000
 const RATIONAL_TYPE_UL: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01,
-    0x03, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01, 0x03, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
 ];
 
 // DateStruct: 060e2b34.01040101.03010500.00000000
 const DATE_STRUCT_TYPE_UL: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01,
-    0x03, 0x01, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01, 0x03, 0x01, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00,
 ];
 
 // TimeStruct: 060e2b34.01040101.03010600.00000000
 const TIME_STRUCT_TYPE_UL: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01,
-    0x03, 0x01, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01, 0x03, 0x01, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00,
 ];
 
 // TimeStamp: 060e2b34.01040101.03010700.00000000
 const TIME_STAMP_TYPE_UL: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01,
-    0x03, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01, 0x03, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00,
 ];
 
 // VersionType: 060e2b34.01040101.03010300.00000000
 const VERSION_TYPE_UL: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01,
-    0x03, 0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01, 0x03, 0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00,
 ];
 
 // Character (UTF-16BE): 060e2b34.01040101.01100100.00000000
 const CHARACTER_TYPE_UL: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01,
-    0x01, 0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01, 0x01, 0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
 ];
 
 // Char (US-ASCII): 060e2b34.01040101.01100300.00000000
 const CHAR_TYPE_UL: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01,
-    0x01, 0x10, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01, 0x01, 0x10, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00,
 ];
 
 // UTF8Character: 060e2b34.01040101.01100500.00000000
 #[allow(dead_code)]
 const UTF8_CHARACTER_TYPE_UL: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01,
-    0x01, 0x10, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x04, 0x01, 0x01, 0x01, 0x10, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00,
 ];
 
 // ── Optional callback for resolving an Auid to a human-readable symbol ────────
@@ -236,9 +217,11 @@ impl<'dict, R: DefinitionResolver> FragmentBuilder<'dict, R> {
         // 1. Resolve class definition.
         // MXF group keys use byte[5]=0x53 (two-byte local set), while the SMPTE
         // Groups register stores class ULs with byte[5]=0x7F (wildcard). Try both.
-        let cd = match self.resolver.get_definition(&group.key)
-            .or_else(|| normalize_class_key(&group.key).as_ref().and_then(|k| self.resolver.get_definition(k)))
-        {
+        let cd = match self.resolver.get_definition(&group.key).or_else(|| {
+            normalize_class_key(&group.key)
+                .as_ref()
+                .and_then(|k| self.resolver.get_definition(k))
+        }) {
             Some(Definition::Class(c)) => c.clone(),
             _ => {
                 self.fire_event(
@@ -644,7 +627,12 @@ impl<'dict, R: DefinitionResolver> FragmentBuilder<'dict, R> {
         // Format as urn:smpte:umid:XXXXXXXX.XXXXXXXX.XXXXXXXX.XXXXXXXX.XXXXXXXX.XXXXXXXX.XXXXXXXX.XXXXXXXX
         let hex: String = data[..32]
             .chunks(4)
-            .map(|chunk| format!("{:02x}{:02x}{:02x}{:02x}", chunk[0], chunk[1], chunk[2], chunk[3]))
+            .map(|chunk| {
+                format!(
+                    "{:02x}{:02x}{:02x}{:02x}",
+                    chunk[0], chunk[1], chunk[2], chunk[3]
+                )
+            })
             .collect::<Vec<_>>()
             .join(".");
         write_text(writer, &format!("urn:smpte:umid:{hex}"))
@@ -687,7 +675,13 @@ impl<'dict, R: DefinitionResolver> FragmentBuilder<'dict, R> {
         if data.len() < 4 {
             return write_text(writer, &hex_bytes(data));
         }
-        write_text(writer, &format!("{:02}:{:02}:{:02}.{:02}", data[0], data[1], data[2], data[3]))
+        write_text(
+            writer,
+            &format!(
+                "{:02}:{:02}:{:02}.{:02}",
+                data[0], data[1], data[2], data[3]
+            ),
+        )
     }
 
     fn rule5_record_timestamp(
@@ -896,7 +890,8 @@ impl<'dict, R: DefinitionResolver> FragmentBuilder<'dict, R> {
             let slice = &data[i * elem_size..(i + 1) * elem_size];
             let mut item_start = BytesStart::new(item_tag.clone());
             if item_ns != REGXML_NS {
-                item_start.push_attribute((format!("xmlns:{item_prefix}").as_str(), item_ns.as_str()));
+                item_start
+                    .push_attribute((format!("xmlns:{item_prefix}").as_str(), item_ns.as_str()));
             }
             writer
                 .write_event(Event::Start(item_start))
@@ -989,7 +984,10 @@ impl<'dict, R: DefinitionResolver> FragmentBuilder<'dict, R> {
             } else {
                 let mut item_start = BytesStart::new(item_tag.clone());
                 if item_ns != REGXML_NS {
-                    item_start.push_attribute((format!("xmlns:{item_prefix}").as_str(), item_ns.as_str()));
+                    item_start.push_attribute((
+                        format!("xmlns:{item_prefix}").as_str(),
+                        item_ns.as_str(),
+                    ));
                 }
                 writer
                     .write_event(Event::Start(item_start))
@@ -1051,9 +1049,11 @@ impl<'dict, R: DefinitionResolver> FragmentBuilder<'dict, R> {
         if let Some(target_set) = self.sets.get(&lookup_uid) {
             let target_set = target_set.clone();
             // Find the class definition for the target.
-            let cd = match self.resolver.get_definition(&target_set.key)
-                .or_else(|| normalize_class_key(&target_set.key).as_ref().and_then(|k| self.resolver.get_definition(k)))
-            {
+            let cd = match self.resolver.get_definition(&target_set.key).or_else(|| {
+                normalize_class_key(&target_set.key)
+                    .as_ref()
+                    .and_then(|k| self.resolver.get_definition(k))
+            }) {
                 Some(Definition::Class(c)) => c.clone(),
                 _ => return write_text(writer, &lookup_uid.to_string()),
             };
@@ -1062,8 +1062,12 @@ impl<'dict, R: DefinitionResolver> FragmentBuilder<'dict, R> {
             // Find the unique-identifier property (not InstanceID).
             let uid_str = target_set.items.iter().find_map(|item| {
                 let pd = all_props.get(&ul_zero_version(item.key))?;
-                if !pd.is_unique_identifier { return None; }
-                if ul_zero_version(item.key) == iuid_norm { return None; }
+                if !pd.is_unique_identifier {
+                    return None;
+                }
+                if ul_zero_version(item.key) == iuid_norm {
+                    return None;
+                }
                 match item.value.len() {
                     32 => Some(format_umid_bytes(&item.value)),
                     16 => {
@@ -1150,8 +1154,8 @@ impl<'dict, R: DefinitionResolver> FragmentBuilder<'dict, R> {
             // UUID-LE swap (reverse groups 0-3, 4-5, 6-7, keep 8-15) then half-swap.
             // Combined: output[0..8] = b[8..16], output[8..12] = b[3..0], etc.
             [
-                b[8], b[9], b[10], b[11], b[12], b[13], b[14], b[15],
-                b[3], b[2], b[1], b[0], b[5], b[4], b[7], b[6],
+                b[8], b[9], b[10], b[11], b[12], b[13], b[14], b[15], b[3], b[2], b[1], b[0], b[5],
+                b[4], b[7], b[6],
             ]
         } else {
             // Big-endian: bytes are already in standard UL/UUID format.
@@ -1263,7 +1267,10 @@ fn ul_zero_version(auid: Auid) -> Auid {
 }
 
 /// Unwrap a Rename chain to reach the base TypeDefinition.
-fn find_base_definition<R: DefinitionResolver>(resolver: &R, td: &TypeDefinition) -> TypeDefinition {
+fn find_base_definition<R: DefinitionResolver>(
+    resolver: &R,
+    td: &TypeDefinition,
+) -> TypeDefinition {
     let mut current = td.clone();
     // Guard against infinite loops.
     for _ in 0..32 {
@@ -1350,7 +1357,12 @@ fn format_uuid_bytes(b: &[u8]) -> String {
 fn format_umid_bytes(b: &[u8]) -> String {
     let hex: String = b[..32]
         .chunks(4)
-        .map(|chunk| format!("{:02x}{:02x}{:02x}{:02x}", chunk[0], chunk[1], chunk[2], chunk[3]))
+        .map(|chunk| {
+            format!(
+                "{:02x}{:02x}{:02x}{:02x}",
+                chunk[0], chunk[1], chunk[2], chunk[3]
+            )
+        })
         .collect::<Vec<_>>()
         .join(".");
     format!("urn:smpte:umid:{hex}")
@@ -1455,7 +1467,11 @@ fn read_characters_ascii(data: &[u8], strip_nul: bool) -> String {
 /// Read UTF-8 bytes as a string.
 fn read_characters_utf8(data: &[u8], strip_nul: bool) -> String {
     let s = std::str::from_utf8(data).unwrap_or("");
-    let s = if strip_nul { s.trim_end_matches('\0') } else { s };
+    let s = if strip_nul {
+        s.trim_end_matches('\0')
+    } else {
+        s
+    };
     st2001_escape(s)
 }
 

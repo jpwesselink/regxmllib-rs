@@ -10,8 +10,7 @@ use crate::MxfError;
 
 /// Random Index Pack key (SMPTE ST 377-1 §11).
 const KEY: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x02, 0x05, 0x01, 0x01,
-    0x0D, 0x01, 0x02, 0x01, 0x11, 0x01, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x02, 0x05, 0x01, 0x01, 0x0D, 0x01, 0x02, 0x01, 0x11, 0x01, 0x00, 0x00,
 ];
 
 /// One entry in a Random Index Pack.
@@ -53,9 +52,12 @@ impl RandomIndexPack {
         let mut entries = Vec::with_capacity(count);
 
         for _ in 0..count {
-            let body_sid    = read_u32_be(&mut c)?;
+            let body_sid = read_u32_be(&mut c)?;
             let byte_offset = read_u64_be(&mut c)?;
-            entries.push(RipEntry { body_sid, byte_offset });
+            entries.push(RipEntry {
+                body_sid,
+                byte_offset,
+            });
         }
 
         Ok(Some(RandomIndexPack { entries }))

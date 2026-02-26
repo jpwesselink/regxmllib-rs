@@ -97,8 +97,7 @@ fn leaf_entries<'a, 'input>(
         .into_iter()
         .flat_map(|entries| entries.children())
         .filter(|n| {
-            n.tag_name().name() == "Entry"
-                && child_text(n, "Kind").as_deref() != Some("NODE")
+            n.tag_name().name() == "Entry" && child_text(n, "Kind").as_deref() != Some("NODE")
         })
 }
 
@@ -112,8 +111,7 @@ fn child_text(node: &roxmltree::Node<'_, '_>, name: &str) -> Option<String> {
 
 /// Parse a required child text value.
 fn req(node: &roxmltree::Node<'_, '_>, field: &str, ctx: &str) -> Result<String, DictError> {
-    child_text(node, field)
-        .ok_or_else(|| DictError::Xml(format!("{ctx}: missing <{field}>")))
+    child_text(node, field).ok_or_else(|| DictError::Xml(format!("{ctx}: missing <{field}>")))
 }
 
 /// Parse an `Auid` from a required child text element containing a URN.
@@ -123,10 +121,7 @@ fn req_auid(node: &roxmltree::Node<'_, '_>, field: &str, ctx: &str) -> Result<Au
 }
 
 /// Parse an optional `Auid` from a child text element.
-fn opt_auid(
-    node: &roxmltree::Node<'_, '_>,
-    field: &str,
-) -> Result<Option<Auid>, DictError> {
+fn opt_auid(node: &roxmltree::Node<'_, '_>, field: &str) -> Result<Option<Auid>, DictError> {
     match child_text(node, field) {
         None => Ok(None),
         Some(s) => Auid::from_urn(&s)
@@ -161,7 +156,11 @@ fn collect_elements(
         };
         index.insert(
             ident,
-            ElementEntry { symbol, namespace, type_auid },
+            ElementEntry {
+                symbol,
+                namespace,
+                type_auid,
+            },
         );
     }
     Ok(())
@@ -261,37 +260,29 @@ fn parse_types(doc: &roxmltree::Document<'_>, dict: &mut MetaDictionary) -> Resu
                 })
             }
 
-            "Character" => {
-                TypeDefinition::Character(CharacterTypeDef {
-                    identification: ident,
-                    symbol,
-                    namespace,
-                })
-            }
+            "Character" => TypeDefinition::Character(CharacterTypeDef {
+                identification: ident,
+                symbol,
+                namespace,
+            }),
 
-            "Stream" => {
-                TypeDefinition::Stream(StreamTypeDef {
-                    identification: ident,
-                    symbol,
-                    namespace,
-                })
-            }
+            "Stream" => TypeDefinition::Stream(StreamTypeDef {
+                identification: ident,
+                symbol,
+                namespace,
+            }),
 
-            "Indirect" => {
-                TypeDefinition::Indirect(IndirectTypeDef {
-                    identification: ident,
-                    symbol,
-                    namespace,
-                })
-            }
+            "Indirect" => TypeDefinition::Indirect(IndirectTypeDef {
+                identification: ident,
+                symbol,
+                namespace,
+            }),
 
-            "Opaque" => {
-                TypeDefinition::Opaque(OpaqueTypeDef {
-                    identification: ident,
-                    symbol,
-                    namespace,
-                })
-            }
+            "Opaque" => TypeDefinition::Opaque(OpaqueTypeDef {
+                identification: ident,
+                symbol,
+                namespace,
+            }),
 
             "Float" => {
                 let size = child_text(&entry, "TypeSize")
@@ -305,13 +296,11 @@ fn parse_types(doc: &roxmltree::Document<'_>, dict: &mut MetaDictionary) -> Resu
                 })
             }
 
-            "LensSerialFloat" => {
-                TypeDefinition::LensSerialFloat(LensSerialFloatTypeDef {
-                    identification: ident,
-                    symbol,
-                    namespace,
-                })
-            }
+            "LensSerialFloat" => TypeDefinition::LensSerialFloat(LensSerialFloatTypeDef {
+                identification: ident,
+                symbol,
+                namespace,
+            }),
 
             "StrongReference" => {
                 let referenced_type = req_auid(&entry, "BaseType", &ctx)?;
@@ -351,10 +340,7 @@ fn parse_types(doc: &roxmltree::Document<'_>, dict: &mut MetaDictionary) -> Resu
                 // if they are integers → Enumeration.
                 let facets = facets_node(&entry);
                 let first_value = facets
-                    .and_then(|f| {
-                        f.children()
-                            .find(|n| n.tag_name().name() == "Facet")
-                    })
+                    .and_then(|f| f.children().find(|n| n.tag_name().name() == "Facet"))
                     .and_then(|facet| child_text(&facet, "Value"));
 
                 if first_value
@@ -398,9 +384,7 @@ fn parse_types(doc: &roxmltree::Document<'_>, dict: &mut MetaDictionary) -> Resu
 fn facets_node<'a, 'input>(
     entry: &'a roxmltree::Node<'a, 'input>,
 ) -> Option<roxmltree::Node<'a, 'input>> {
-    entry
-        .children()
-        .find(|n| n.tag_name().name() == "Facets")
+    entry.children().find(|n| n.tag_name().name() == "Facets")
 }
 
 /// Collect `<Facets><Facet><Value>` as AUIDs (for WeakReference target sets).
@@ -438,7 +422,9 @@ fn parse_record_facets(
 }
 
 /// Collect `<Facets><Facet>` as Enumeration elements (Symbol + integer Value).
-fn parse_enum_facets(entry: &roxmltree::Node<'_, '_>) -> Result<Vec<EnumerationElement>, DictError> {
+fn parse_enum_facets(
+    entry: &roxmltree::Node<'_, '_>,
+) -> Result<Vec<EnumerationElement>, DictError> {
     let mut elements = Vec::new();
     if let Some(facets) = facets_node(entry) {
         for facet in facets.children().filter(|n| n.tag_name().name() == "Facet") {
@@ -493,9 +479,11 @@ fn parse_groups(
 
         // Parse Contents.Record → PropertyDefinitions
         if let Some(contents) = entry.children().find(|n| n.tag_name().name() == "Contents") {
-            for record in contents.children().filter(|n| n.tag_name().name() == "Record") {
-                if let Some(prop_def) =
-                    parse_property_from_record(&record, &ident, element_index)?
+            for record in contents
+                .children()
+                .filter(|n| n.tag_name().name() == "Record")
+            {
+                if let Some(prop_def) = parse_property_from_record(&record, &ident, element_index)?
                 {
                     dict.add(Definition::Property(prop_def))?;
                 }

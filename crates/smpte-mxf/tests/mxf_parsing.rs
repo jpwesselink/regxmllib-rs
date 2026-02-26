@@ -2,14 +2,15 @@ use std::{fs::File, io::BufReader, path::PathBuf};
 
 use smpte_klv::KlvStream;
 use smpte_mxf::{
-    seek_header_partition, seek_footer_partition,
-    PartitionKind, PartitionPack, PrimerPack,
+    seek_footer_partition, seek_header_partition, PartitionKind, PartitionPack, PrimerPack,
 };
 
 fn test_file(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent().unwrap()
-        .parent().unwrap()
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
         .join("resources/test-mxf")
         .join(name)
 }
@@ -25,7 +26,10 @@ fn read_header_pp(name: &str) -> PartitionPack {
     assert!(offset <= 65536, "offset beyond run-in limit");
 
     let mut stream = KlvStream::new(&mut r);
-    let triplet = stream.read_triplet().unwrap().expect("no triplet after seek");
+    let triplet = stream
+        .read_triplet()
+        .unwrap()
+        .expect("no triplet after seek");
     PartitionPack::from_triplet(&triplet)
         .expect("from_triplet error")
         .expect("triplet is not a partition pack")
@@ -75,7 +79,10 @@ fn primer_pack_present_video1() {
             break;
         }
     }
-    assert!(primer_found, "no primer pack found after header partition pack");
+    assert!(
+        primer_found,
+        "no primer pack found after header partition pack"
+    );
 }
 
 #[test]
@@ -93,10 +100,17 @@ fn footer_partition_reachable() {
     let footer_offset = seek_footer_partition(&mut r).expect("footer partition not found");
 
     let mut stream = KlvStream::new(&mut r);
-    let triplet = stream.read_triplet().unwrap().expect("no triplet at footer");
+    let triplet = stream
+        .read_triplet()
+        .unwrap()
+        .expect("no triplet at footer");
     let pp = PartitionPack::from_triplet(&triplet)
         .expect("from_triplet error")
         .expect("footer is not a partition pack");
 
-    assert_eq!(pp.kind, PartitionKind::Footer, "expected footer at offset {footer_offset}");
+    assert_eq!(
+        pp.kind,
+        PartitionKind::Footer,
+        "expected footer at offset {footer_offset}"
+    );
 }

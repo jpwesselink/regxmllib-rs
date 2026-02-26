@@ -4,10 +4,10 @@ use quick_xml::{
     events::{BytesDecl, Event},
     Writer,
 };
+use regxml_dict::DefinitionResolver;
 use smpte_klv::{KlvStream, LocalSet};
 use smpte_mxf::{is_fill_item, PartitionPack, PrimerPack};
 use smpte_types::{Auid, Ul};
-use regxml_dict::DefinitionResolver;
 
 use crate::{
     event::EventHandler,
@@ -19,8 +19,7 @@ use crate::{
 
 // Preface class key: 060e2b34.02530101.0d010101.01012f00
 const PREFACE_KEY_BYTES: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x02, 0x53, 0x01, 0x01,
-    0x0D, 0x01, 0x01, 0x01, 0x01, 0x01, 0x2F, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x02, 0x53, 0x01, 0x01, 0x0D, 0x01, 0x01, 0x01, 0x01, 0x01, 0x2F, 0x00,
 ];
 
 // Version byte mask for UL comparison.
@@ -28,20 +27,17 @@ const PREFACE_KEY_MASK: u16 = 0xFF7F;
 
 // Index Table Segment key: 060e2b34.02530101.0d010201.01100100
 const INDEX_TABLE_KEY_BYTES: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x02, 0x53, 0x01, 0x01,
-    0x0D, 0x01, 0x02, 0x01, 0x01, 0x10, 0x01, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x02, 0x53, 0x01, 0x01, 0x0D, 0x01, 0x02, 0x01, 0x01, 0x10, 0x01, 0x00,
 ];
 
 // InstanceID property: 060e2b34.01010101.01011502.00000000
 const INSTANCE_UID_UL: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x01, 0x01, 0x15, 0x02, 0x00, 0x00, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x15, 0x02, 0x00, 0x00, 0x00, 0x00,
 ];
 
 // GenericDescriptor class key: 060e2b34.02530101.0d010101.01012400
 const GENERIC_DESCRIPTOR_KEY_BYTES: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x02, 0x53, 0x01, 0x01,
-    0x0D, 0x01, 0x01, 0x01, 0x01, 0x01, 0x24, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x02, 0x53, 0x01, 0x01, 0x0D, 0x01, 0x01, 0x01, 0x01, 0x01, 0x24, 0x00,
 ];
 
 // ── Public types ──────────────────────────────────────────────────────────────
@@ -118,15 +114,19 @@ fn seek_to_partition<R: Read + Seek>(
     target: PartitionTarget,
 ) -> Result<(), MxfFragmentError> {
     match target {
-        PartitionTarget::Header => { smpte_mxf::seek_header_partition(reader)?; }
-        PartitionTarget::Footer => { smpte_mxf::seek_footer_partition(reader)?; }
+        PartitionTarget::Header => {
+            smpte_mxf::seek_header_partition(reader)?;
+        }
+        PartitionTarget::Footer => {
+            smpte_mxf::seek_footer_partition(reader)?;
+        }
         PartitionTarget::Auto => {
             let start = reader
                 .stream_position()
                 .map_err(|e| MxfFragmentError::Io(e.to_string()))?;
 
-            let footer_ok = smpte_mxf::seek_footer_partition(reader).is_ok()
-                && footer_has_metadata(reader);
+            let footer_ok =
+                smpte_mxf::seek_footer_partition(reader).is_ok() && footer_has_metadata(reader);
 
             if !footer_ok {
                 reader
@@ -155,8 +155,8 @@ fn footer_has_metadata<R: Read + Seek>(reader: &mut R) -> bool {
             .read_triplet()
             .map_err(|e| MxfFragmentError::Klv(e.to_string()))?
             .ok_or(MxfFragmentError::MissingPartitionPack)?;
-        let pp = PartitionPack::from_triplet(&triplet)?
-            .ok_or(MxfFragmentError::MissingPartitionPack)?;
+        let pp =
+            PartitionPack::from_triplet(&triplet)?.ok_or(MxfFragmentError::MissingPartitionPack)?;
         Ok(pp.header_byte_count > 0)
     })();
 
@@ -177,8 +177,8 @@ fn extract_partition_metadata<R: Read + Seek>(
         .read_triplet()
         .map_err(|e| MxfFragmentError::Klv(e.to_string()))?
         .ok_or(MxfFragmentError::MissingPartitionPack)?;
-    let pp: PartitionPack = PartitionPack::from_triplet(&pp_triplet)?
-        .ok_or(MxfFragmentError::MissingPartitionPack)?;
+    let pp: PartitionPack =
+        PartitionPack::from_triplet(&pp_triplet)?.ok_or(MxfFragmentError::MissingPartitionPack)?;
 
     let header_byte_count = pp.header_byte_count;
 
@@ -394,8 +394,7 @@ fn collect_local_sets<R: Read + Seek>(
             .key
             .as_ul()
             .map(|ul| {
-                *ul.as_bytes() == INDEX_TABLE_KEY_BYTES
-                    || ul.equals_with_mask(&index_key, 0xFF7F)
+                *ul.as_bytes() == INDEX_TABLE_KEY_BYTES || ul.equals_with_mask(&index_key, 0xFF7F)
             })
             .unwrap_or(false)
         {

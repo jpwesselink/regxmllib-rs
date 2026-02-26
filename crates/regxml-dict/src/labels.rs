@@ -25,7 +25,9 @@ impl LabelsRegister {
         let doc = roxmltree::Document::parse(text).map_err(|e| DictError::Xml(e.to_string()))?;
         let root = doc.root_element();
         if root.tag_name().name() != "LabelsRegister" {
-            return Ok(Self { map: HashMap::new() });
+            return Ok(Self {
+                map: HashMap::new(),
+            });
         }
 
         let mut map = HashMap::new();
@@ -35,7 +37,10 @@ impl LabelsRegister {
             None => return Ok(Self { map }),
         };
 
-        for entry in entries.children().filter(|n| n.tag_name().name() == "Entry") {
+        for entry in entries
+            .children()
+            .filter(|n| n.tag_name().name() == "Entry")
+        {
             // Skip NODE (non-leaf) entries.
             let kind = entry
                 .children()
@@ -73,7 +78,9 @@ impl LabelsRegister {
 
     /// Construct an empty register.
     pub fn empty() -> Self {
-        Self { map: HashMap::new() }
+        Self {
+            map: HashMap::new(),
+        }
     }
 
     /// Look up the symbol for a UL.

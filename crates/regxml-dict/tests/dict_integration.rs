@@ -41,8 +41,7 @@ fn from_xml_finds_integer_type() {
     let dict = MetaDictionary::from_xml(&xml).expect("parse failed");
 
     // UInt8 is one of the most basic types — UL 060e2b34.01040101.01010100.00000000
-    let ul = Auid::from_urn("urn:smpte:ul:060e2b34.01040101.01010100.00000000")
-        .expect("bad urn");
+    let ul = Auid::from_urn("urn:smpte:ul:060e2b34.01040101.01010100.00000000").expect("bad urn");
     let def = dict.get_definition(&ul).expect("UInt8 not found");
     match def {
         Definition::Type(TypeDefinition::Integer(td)) => {
@@ -61,8 +60,7 @@ fn from_xml_finds_class_definition() {
     let dict = MetaDictionary::from_xml(&xml).expect("parse failed");
 
     // DMCVTGenericSet1 — first class in that file
-    let ul = Auid::from_urn("urn:smpte:ul:060e2b34.027f0101.05310101.00000000")
-        .expect("bad urn");
+    let ul = Auid::from_urn("urn:smpte:ul:060e2b34.027f0101.05310101.00000000").expect("bad urn");
     match dict.get_definition(&ul) {
         Some(Definition::Class(cd)) => {
             assert_eq!(cd.symbol, "DMCVTGenericSet1");
@@ -76,7 +74,9 @@ fn from_xml_finds_class_definition() {
 fn from_xml_symbol_lookup() {
     let xml = read_resource("regxml-dicts/www-smpte-ra-org-reg-2003-2012.xml");
     let dict = MetaDictionary::from_xml(&xml).expect("parse failed");
-    let def = dict.get_definition_by_symbol("UInt16").expect("UInt16 not found");
+    let def = dict
+        .get_definition_by_symbol("UInt16")
+        .expect("UInt16 not found");
     assert!(matches!(def, Definition::Type(TypeDefinition::Integer(_))));
 }
 
@@ -93,15 +93,14 @@ fn collection_merges_dicts() {
     let xml1 = read_resource("regxml-dicts/www-smpte-ra-org-reg-2003-2012.xml");
     let xml2 = read_resource("regxml-dicts/www-smpte-ra-org-reg-395-2014.xml");
 
-    let collection = MetaDictionaryCollection::from_xml_slices(&[&xml1, &xml2])
-        .expect("parse failed");
+    let collection =
+        MetaDictionaryCollection::from_xml_slices(&[&xml1, &xml2]).expect("parse failed");
 
     // Both UInt8 (from 2003) and DMCVTApp1Set (from 395) should be findable.
     let ul8 = Auid::from_urn("urn:smpte:ul:060e2b34.01040101.01010100.00000000").unwrap();
     assert!(collection.get_definition(&ul8).is_some());
 
-    let ul_dmcvt =
-        Auid::from_urn("urn:smpte:ul:060e2b34.027f0101.05310201.00000000").unwrap();
+    let ul_dmcvt = Auid::from_urn("urn:smpte:ul:060e2b34.027f0101.05310201.00000000").unwrap();
     assert!(collection.get_definition(&ul_dmcvt).is_some());
 }
 
@@ -207,8 +206,7 @@ fn import_groups_and_elements_registers() {
     let elements_xml = read_resource("registers/Elements.xml");
     let groups_xml = read_resource("registers/Groups.xml");
 
-    let dict = import_registers(&[&types_xml, &elements_xml, &groups_xml])
-        .expect("import failed");
+    let dict = import_registers(&[&types_xml, &elements_xml, &groups_xml]).expect("import failed");
 
     // InterchangeObject class should be present
     let ul = Auid::from_urn("urn:smpte:ul:060e2b34.027f0101.0d010101.01010100").unwrap();
@@ -226,8 +224,7 @@ fn import_groups_produces_property_definitions() {
     let elements_xml = read_resource("registers/Elements.xml");
     let groups_xml = read_resource("registers/Groups.xml");
 
-    let dict = import_registers(&[&types_xml, &elements_xml, &groups_xml])
-        .expect("import failed");
+    let dict = import_registers(&[&types_xml, &elements_xml, &groups_xml]).expect("import failed");
 
     let props: Vec<_> = dict
         .all_definitions()
@@ -242,14 +239,16 @@ fn import_groups_parent_class() {
     let elements_xml = read_resource("registers/Elements.xml");
     let groups_xml = read_resource("registers/Groups.xml");
 
-    let dict = import_registers(&[&types_xml, &elements_xml, &groups_xml])
-        .expect("import failed");
+    let dict = import_registers(&[&types_xml, &elements_xml, &groups_xml]).expect("import failed");
 
     // StaticTrack has a parent class
     let def = dict.get_definition_by_symbol("StaticTrack");
     match def {
         Some(Definition::Class(cd)) => {
-            assert!(cd.parent_class.is_some(), "StaticTrack should have a parent class");
+            assert!(
+                cd.parent_class.is_some(),
+                "StaticTrack should have a parent class"
+            );
         }
         other => panic!("expected ClassDefinition, got {other:?}"),
     }

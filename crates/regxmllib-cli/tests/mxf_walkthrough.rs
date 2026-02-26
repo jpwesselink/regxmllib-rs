@@ -4,11 +4,7 @@
 //! Nothing is asserted beyond "it doesn't panic" — this test is mainly meant
 //! to be run with `cargo test -- --nocapture` to see the human-readable dump.
 
-use std::{
-    fs::File,
-    io::BufReader,
-    path::PathBuf,
-};
+use std::{fs::File, io::BufReader, path::PathBuf};
 
 use regxml_dict::{
     definition::{Definition, TypeDefinition},
@@ -38,8 +34,22 @@ fn fmt_ul_bytes(b: &[u8]) -> String {
     format!(
         "{:02x}{:02x}{:02x}{:02x}.{:02x}{:02x}{:02x}{:02x}.\
          {:02x}{:02x}{:02x}{:02x}.{:02x}{:02x}{:02x}{:02x}",
-        b[0],b[1],b[2],b[3], b[4],b[5],b[6],b[7],
-        b[8],b[9],b[10],b[11], b[12],b[13],b[14],b[15]
+        b[0],
+        b[1],
+        b[2],
+        b[3],
+        b[4],
+        b[5],
+        b[6],
+        b[7],
+        b[8],
+        b[9],
+        b[10],
+        b[11],
+        b[12],
+        b[13],
+        b[14],
+        b[15]
     )
 }
 
@@ -62,19 +72,17 @@ fn hex_preview(data: &[u8]) -> String {
 /// readable string.  Falls back to hex_preview for unknown/complex types.
 fn interpret_value(type_def: &TypeDefinition, data: &[u8]) -> String {
     match type_def {
-        TypeDefinition::Integer(td) => {
-            match (td.size, td.is_signed, data.len()) {
-                (1, false, 1) => format!("{}", data[0]),
-                (1, true, 1)  => format!("{}", data[0] as i8),
-                (2, false, 2) => format!("{}", u16::from_be_bytes([data[0], data[1]])),
-                (2, true, 2)  => format!("{}", i16::from_be_bytes([data[0], data[1]])),
-                (4, false, 4) => format!("{}", u32::from_be_bytes(data[..4].try_into().unwrap())),
-                (4, true, 4)  => format!("{}", i32::from_be_bytes(data[..4].try_into().unwrap())),
-                (8, false, 8) => format!("{}", u64::from_be_bytes(data[..8].try_into().unwrap())),
-                (8, true, 8)  => format!("{}", i64::from_be_bytes(data[..8].try_into().unwrap())),
-                _ => hex_preview(data),
-            }
-        }
+        TypeDefinition::Integer(td) => match (td.size, td.is_signed, data.len()) {
+            (1, false, 1) => format!("{}", data[0]),
+            (1, true, 1) => format!("{}", data[0] as i8),
+            (2, false, 2) => format!("{}", u16::from_be_bytes([data[0], data[1]])),
+            (2, true, 2) => format!("{}", i16::from_be_bytes([data[0], data[1]])),
+            (4, false, 4) => format!("{}", u32::from_be_bytes(data[..4].try_into().unwrap())),
+            (4, true, 4) => format!("{}", i32::from_be_bytes(data[..4].try_into().unwrap())),
+            (8, false, 8) => format!("{}", u64::from_be_bytes(data[..8].try_into().unwrap())),
+            (8, true, 8) => format!("{}", i64::from_be_bytes(data[..8].try_into().unwrap())),
+            _ => hex_preview(data),
+        },
         TypeDefinition::Rename(_) | TypeDefinition::StrongReference(_) => {
             if data.len() == 16 {
                 format!("urn:smpte:ul:{}", fmt_ul_bytes(data))
@@ -103,9 +111,9 @@ fn interpret_value(type_def: &TypeDefinition, data: &[u8]) -> String {
 #[test]
 fn walk_video1_header_metadata() {
     // ── 1. Load metadictionaries ─────────────────────────────────────────────
-    let types_xml   = read_bytes("registers/Types.xml");
+    let types_xml = read_bytes("registers/Types.xml");
     let elements_xml = read_bytes("registers/Elements.xml");
-    let groups_xml  = read_bytes("registers/Groups.xml");
+    let groups_xml = read_bytes("registers/Groups.xml");
 
     let dict = import_registers(&[&types_xml, &elements_xml, &groups_xml])
         .expect("import_registers failed");
@@ -138,7 +146,8 @@ fn walk_video1_header_metadata() {
         pp.kind, pp.status, pp.major_version, pp.minor_version
     );
     println!(
-        "  OP: urn:smpte:ul:{}", fmt_ul_bytes(pp.operational_pattern.as_bytes())
+        "  OP: urn:smpte:ul:{}",
+        fmt_ul_bytes(pp.operational_pattern.as_bytes())
     );
     for ec in &pp.essence_containers {
         println!("  EC: urn:smpte:ul:{}", fmt_ul_bytes(ec.as_bytes()));
@@ -161,7 +170,10 @@ fn walk_video1_header_metadata() {
         }
     }
     let primer = primer_opt.expect("no primer pack found");
-    println!("Primer pack: {} local tags", primer.local_tag_register.len());
+    println!(
+        "Primer pack: {} local tags",
+        primer.local_tag_register.len()
+    );
 
     // ── 4. Read header metadata sets ─────────────────────────────────────────
     let tag_register = &primer.local_tag_register;
@@ -170,17 +182,15 @@ fn walk_video1_header_metadata() {
     let mut unknown_props = 0usize;
 
     while let Some(triplet) = stream.read_triplet().unwrap() {
-
         if is_fill_item(&triplet) {
             continue;
         }
 
         // Try to parse as a local set; skip non-local-set triplets.
-        let local_set =
-            match smpte_klv::LocalSet::from_triplet(&triplet, tag_register) {
-                Ok(s) => s,
-                Err(_) => continue,
-            };
+        let local_set = match smpte_klv::LocalSet::from_triplet(&triplet, tag_register) {
+            Ok(s) => s,
+            Err(_) => continue,
+        };
 
         set_count += 1;
 
@@ -228,17 +238,11 @@ fn walk_video1_header_metadata() {
                 _ => {
                     unknown_props += 1;
                     let auid_str = format!("{prop_auid}");
-                    (
-                        auid_str,
-                        "?".to_owned(),
-                        hex_preview(&item.value),
-                    )
+                    (auid_str, "?".to_owned(), hex_preview(&item.value))
                 }
             };
 
-            println!(
-                "  {prop_name:<40}  [{type_desc:<30}]  {value_str}"
-            );
+            println!("  {prop_name:<40}  [{type_desc:<30}]  {value_str}");
         }
         println!();
     }

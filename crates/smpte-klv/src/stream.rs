@@ -3,7 +3,7 @@ use std::io::{Read, Seek};
 use smpte_types::Auid;
 
 use crate::{
-    ber::{read_ber_length, ber_encoded_len},
+    ber::{ber_encoded_len, read_ber_length},
     KlvError, MemoryTriplet,
 };
 

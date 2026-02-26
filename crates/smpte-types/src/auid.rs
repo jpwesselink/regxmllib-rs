@@ -35,8 +35,8 @@ impl Auid {
         if s.starts_with("urn:smpte:ul:") {
             Ok(Auid::Ul(Ul::from_urn(s)?))
         } else if let Some(inner) = s.strip_prefix("urn:uuid:") {
-            let u = uuid::Uuid::parse_str(inner)
-                .map_err(|e| AuidParseError::Uuid(e.to_string()))?;
+            let u =
+                uuid::Uuid::parse_str(inner).map_err(|e| AuidParseError::Uuid(e.to_string()))?;
             Ok(Auid::Uuid(Uuid::from_bytes(*u.as_bytes())))
         } else {
             Err(AuidParseError::InvalidPrefix(s.chars().take(32).collect()))

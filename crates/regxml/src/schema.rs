@@ -116,10 +116,13 @@ impl<'dict, R: DefinitionResolver> XmlSchemaBuilder<'dict, R> {
             any.push_attribute(("maxOccurs", "unbounded"));
             any.push_attribute(("processContents", "lax"));
             w.write_event(Event::Empty(any)).map_err(xe)?;
-            w.write_event(Event::End(BytesEnd::new("xs:sequence"))).map_err(xe)?;
-            w.write_event(Event::End(BytesEnd::new("xs:complexType"))).map_err(xe)?;
+            w.write_event(Event::End(BytesEnd::new("xs:sequence")))
+                .map_err(xe)?;
+            w.write_event(Event::End(BytesEnd::new("xs:complexType")))
+                .map_err(xe)?;
 
-            w.write_event(Event::End(BytesEnd::new("xs:element"))).map_err(xe)?;
+            w.write_event(Event::End(BytesEnd::new("xs:element")))
+                .map_err(xe)?;
         }
 
         // ── reg:Item ───────────────────────────────────────────────────────────
@@ -146,15 +149,18 @@ impl<'dict, R: DefinitionResolver> XmlSchemaBuilder<'dict, R> {
             any.push_attribute(("maxOccurs", "unbounded"));
             any.push_attribute(("processContents", "lax"));
             w.write_event(Event::Empty(any)).map_err(xe)?;
-            w.write_event(Event::End(BytesEnd::new("xs:sequence"))).map_err(xe)?;
+            w.write_event(Event::End(BytesEnd::new("xs:sequence")))
+                .map_err(xe)?;
 
             let mut aa = BytesStart::new("xs:anyAttribute");
             aa.push_attribute(("namespace", "##any"));
             aa.push_attribute(("processContents", "lax"));
             w.write_event(Event::Empty(aa)).map_err(xe)?;
 
-            w.write_event(Event::End(BytesEnd::new("xs:complexType"))).map_err(xe)?;
-            w.write_event(Event::End(BytesEnd::new("xs:element"))).map_err(xe)?;
+            w.write_event(Event::End(BytesEnd::new("xs:complexType")))
+                .map_err(xe)?;
+            w.write_event(Event::End(BytesEnd::new("xs:element")))
+                .map_err(xe)?;
         }
 
         // ── Per-class declarations ─────────────────────────────────────────────
@@ -191,7 +197,8 @@ impl<'dict, R: DefinitionResolver> XmlSchemaBuilder<'dict, R> {
         }
 
         // ── Close xs:schema ───────────────────────────────────────────────────
-        w.write_event(Event::End(BytesEnd::new("xs:schema"))).map_err(xe)?;
+        w.write_event(Event::End(BytesEnd::new("xs:schema")))
+            .map_err(xe)?;
 
         Ok(())
     }
@@ -227,14 +234,20 @@ fn write_class_type<W: Write>(
 
     // Optional annotation with source namespace
     if !class.namespace.is_empty() {
-        w.write_event(Event::Start(BytesStart::new("xs:annotation"))).map_err(xe)?;
-        w.write_event(Event::Start(BytesStart::new("xs:documentation"))).map_err(xe)?;
-        w.write_event(Event::Text(BytesText::new(&class.namespace))).map_err(xe)?;
-        w.write_event(Event::End(BytesEnd::new("xs:documentation"))).map_err(xe)?;
-        w.write_event(Event::End(BytesEnd::new("xs:annotation"))).map_err(xe)?;
+        w.write_event(Event::Start(BytesStart::new("xs:annotation")))
+            .map_err(xe)?;
+        w.write_event(Event::Start(BytesStart::new("xs:documentation")))
+            .map_err(xe)?;
+        w.write_event(Event::Text(BytesText::new(&class.namespace)))
+            .map_err(xe)?;
+        w.write_event(Event::End(BytesEnd::new("xs:documentation")))
+            .map_err(xe)?;
+        w.write_event(Event::End(BytesEnd::new("xs:annotation")))
+            .map_err(xe)?;
     }
 
-    w.write_event(Event::Start(BytesStart::new("xs:sequence"))).map_err(xe)?;
+    w.write_event(Event::Start(BytesStart::new("xs:sequence")))
+        .map_err(xe)?;
 
     for prop in props {
         let mut pe = BytesStart::new("xs:element");
@@ -253,7 +266,8 @@ fn write_class_type<W: Write>(
     any.push_attribute(("processContents", "lax"));
     w.write_event(Event::Empty(any)).map_err(xe)?;
 
-    w.write_event(Event::End(BytesEnd::new("xs:sequence"))).map_err(xe)?;
+    w.write_event(Event::End(BytesEnd::new("xs:sequence")))
+        .map_err(xe)?;
 
     // reg:uid attribute
     let mut uid_ref = BytesStart::new("xs:attribute");
@@ -266,7 +280,8 @@ fn write_class_type<W: Write>(
     aa.push_attribute(("processContents", "lax"));
     w.write_event(Event::Empty(aa)).map_err(xe)?;
 
-    w.write_event(Event::End(BytesEnd::new("xs:complexType"))).map_err(xe)?;
+    w.write_event(Event::End(BytesEnd::new("xs:complexType")))
+        .map_err(xe)?;
     Ok(())
 }
 

@@ -23,8 +23,8 @@ thiserror   = "2"
 anyhow      = "1"
 quick-xml   = { version = "0.37", features = ["serialize"] }
 serde       = { version = "1", features = ["derive"] }
-uuid        = { version = "1", features = ["v4"] }
-half        = "2"
+uuid        = { version = "=1.11.1", features = ["v4"] }
+half        = "=2.4.1"
 clap        = { version = "4", features = ["derive"] }
 tracing     = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

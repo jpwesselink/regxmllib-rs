@@ -40,17 +40,24 @@ fn flatten_xml(xml: &[u8]) -> Vec<XmlLeaf> {
                     }
                     _ => String::new(),
                 };
-                let local =
-                    std::str::from_utf8(e.local_name().into_inner()).unwrap_or("").to_owned();
-                let clark =
-                    if ns_str.is_empty() { local } else { format!("{{{ns_str}}}{local}") };
+                let local = std::str::from_utf8(e.local_name().into_inner())
+                    .unwrap_or("")
+                    .to_owned();
+                let clark = if ns_str.is_empty() {
+                    local
+                } else {
+                    format!("{{{ns_str}}}{local}")
+                };
                 tag_stack.push(clark);
             }
             Ok((_, Event::Text(t))) => {
                 // Decode XML entities (&amp; &lt; &quot; &#NNN; etc.) before
                 // comparing so that different serialisation choices (e.g. `"`
                 // vs `&quot;`) do not cause false mismatches.
-                let text = t.unescape().map(|s| s.trim().to_owned()).unwrap_or_default();
+                let text = t
+                    .unescape()
+                    .map(|s| s.trim().to_owned())
+                    .unwrap_or_default();
                 if !text.is_empty() {
                     if let Some(tag) = tag_stack.last().cloned() {
                         leaves.push(XmlLeaf { tag, text });
@@ -85,16 +92,15 @@ fn read_bytes(path: &str) -> Vec<u8> {
 
 /// Convert `mxf_name.mxf` to RegXML and compare against `mxf_name.xml` golden.
 fn run_golden(mxf_name: &str) {
-    let types_xml    = read_bytes("registers/Types.xml");
+    let types_xml = read_bytes("registers/Types.xml");
     let elements_xml = read_bytes("registers/Elements.xml");
-    let groups_xml   = read_bytes("registers/Groups.xml");
+    let groups_xml = read_bytes("registers/Groups.xml");
 
     let dict = import_registers(&[&types_xml, &elements_xml, &groups_xml])
         .expect("import_registers failed");
 
     let mxf_path = resources().join(format!("test-mxf/{mxf_name}.mxf"));
-    let file = File::open(&mxf_path)
-        .unwrap_or_else(|_| panic!("MXF file not found: {mxf_path:?}"));
+    let file = File::open(&mxf_path).unwrap_or_else(|_| panic!("MXF file not found: {mxf_path:?}"));
     let mut reader = BufReader::new(file);
 
     let mut xml_output = Vec::new();
@@ -108,7 +114,7 @@ fn run_golden(mxf_name: &str) {
 
     let golden_bytes = read_bytes(&format!("test-regxml/{mxf_name}.xml"));
 
-    let ours   = flatten_xml(&xml_output);
+    let ours = flatten_xml(&xml_output);
     let golden = flatten_xml(&golden_bytes);
 
     let len = ours.len().max(golden.len());
@@ -150,25 +156,41 @@ fn run_golden(mxf_name: &str) {
 // ── Golden-file tests ────────────────────────────────────────────────────────
 
 #[test]
-fn golden_audio1() { run_golden("audio1"); }
+fn golden_audio1() {
+    run_golden("audio1");
+}
 
 #[test]
-fn golden_audio2() { run_golden("audio2"); }
+fn golden_audio2() {
+    run_golden("audio2");
+}
 
 #[test]
-fn golden_class14() { run_golden("class14"); }
+fn golden_class14() {
+    run_golden("class14");
+}
 
 #[test]
-fn golden_escape_chars() { run_golden("escape-chars"); }
+fn golden_escape_chars() {
+    run_golden("escape-chars");
+}
 
 #[test]
-fn golden_indirect() { run_golden("indirect"); }
+fn golden_indirect() {
+    run_golden("indirect");
+}
 
 #[test]
-fn golden_utf8_embedded_text() { run_golden("utf8_embedded_text"); }
+fn golden_utf8_embedded_text() {
+    run_golden("utf8_embedded_text");
+}
 
 #[test]
-fn golden_video1() { run_golden("video1"); }
+fn golden_video1() {
+    run_golden("video1");
+}
 
 #[test]
-fn golden_video2() { run_golden("video2"); }
+fn golden_video2() {
+    run_golden("video2");
+}

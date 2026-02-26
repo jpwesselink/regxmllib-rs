@@ -3,7 +3,9 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
 
-use regxml::{AuidNamer, MxfFragmentBuilder, MxfFragmentOptions, PartitionTarget, RootMode, XmlSchemaBuilder};
+use regxml::{
+    AuidNamer, MxfFragmentBuilder, MxfFragmentOptions, PartitionTarget, RootMode, XmlSchemaBuilder,
+};
 use regxml_dict::{importer::import_registers, LabelsRegister, MetaDictionary};
 use smpte_types::Auid;
 
@@ -103,7 +105,8 @@ pub fn run_regxml_dump(
 
     match output {
         Some(path) => {
-            let out = File::create(path).with_context(|| format!("creating output file {path:?}"))?;
+            let out =
+                File::create(path).with_context(|| format!("creating output file {path:?}"))?;
             let mut writer = BufWriter::new(out);
             MxfFragmentBuilder::from_reader(&mut reader, &mut writer, &dict, options)
                 .context("MXF to RegXML conversion")?;
@@ -164,8 +167,8 @@ pub fn run_gen_dict_xsd(dict_paths: &[PathBuf], output: &Path) -> Result<()> {
     let mut merged = MetaDictionary::new("", "");
     for path in dict_paths {
         let xml = std::fs::read(path).with_context(|| format!("reading {path:?}"))?;
-        let dict =
-            MetaDictionary::from_xml(&xml).with_context(|| format!("parsing metadictionary {path:?}"))?;
+        let dict = MetaDictionary::from_xml(&xml)
+            .with_context(|| format!("parsing metadictionary {path:?}"))?;
         for definition in dict.all_definitions() {
             merged.add(definition.clone()).ok();
         }
@@ -190,4 +193,3 @@ pub fn run_gen_dict_xsd(dict_paths: &[PathBuf], output: &Path) -> Result<()> {
 
     Ok(())
 }
-

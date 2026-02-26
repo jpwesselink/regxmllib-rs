@@ -13,8 +13,7 @@ use crate::MxfError;
 /// Byte[13] = kind (0x02 Header / 0x03 Body / 0x04 Footer) — skipped by MASK.
 /// Byte[14] = status (0x01–0x04) — skipped by MASK.
 const KEY: [u8; 16] = [
-    0x06, 0x0E, 0x2B, 0x34, 0x02, 0x05, 0x01, 0x01,
-    0x0D, 0x01, 0x02, 0x01, 0x01, 0x00, 0x00, 0x00,
+    0x06, 0x0E, 0x2B, 0x34, 0x02, 0x05, 0x01, 0x01, 0x0D, 0x01, 0x02, 0x01, 0x01, 0x00, 0x00, 0x00,
 ];
 
 /// `equals_with_mask` mask for partition pack detection.
@@ -102,24 +101,24 @@ impl PartitionPack {
 
         let mut c = Cursor::new(triplet.value.as_slice());
 
-        let major_version    = read_u16_be(&mut c)?;
-        let minor_version    = read_u16_be(&mut c)?;
-        let kag_size         = read_u32_be(&mut c)?;
-        let this_partition   = read_u64_be(&mut c)?;
+        let major_version = read_u16_be(&mut c)?;
+        let minor_version = read_u16_be(&mut c)?;
+        let kag_size = read_u32_be(&mut c)?;
+        let this_partition = read_u64_be(&mut c)?;
         let previous_partition = read_u64_be(&mut c)?;
         let footer_partition = read_u64_be(&mut c)?;
         let header_byte_count = read_u64_be(&mut c)?;
-        let index_byte_count  = read_u64_be(&mut c)?;
-        let index_sid        = read_u32_be(&mut c)?;
-        let body_offset      = read_u64_be(&mut c)?;
-        let body_sid         = read_u32_be(&mut c)?;
+        let index_byte_count = read_u64_be(&mut c)?;
+        let index_sid = read_u32_be(&mut c)?;
+        let body_offset = read_u64_be(&mut c)?;
+        let body_sid = read_u32_be(&mut c)?;
 
         let mut op_bytes = [0u8; 16];
         std::io::Read::read_exact(&mut c, &mut op_bytes)?;
         let operational_pattern = Ul::from_bytes(op_bytes);
 
         // Essence containers — MXF batch: u32 count + u32 item_size + N×16 bytes
-        let ec_count     = read_u32_be(&mut c)?;
+        let ec_count = read_u32_be(&mut c)?;
         let _ec_item_len = read_u32_be(&mut c)?; // should be 16
         let mut essence_containers = Vec::with_capacity(ec_count as usize);
         for _ in 0..ec_count {

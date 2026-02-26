@@ -9,7 +9,7 @@ pub mod umid;
 pub mod uuid;
 
 pub use auid::Auid;
+pub use half::f16 as HalfFloat;
 pub use ul::Ul;
 pub use umid::Umid;
 pub use uuid::Uuid;
-pub use half::f16 as HalfFloat;

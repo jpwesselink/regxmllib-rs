@@ -2,10 +2,7 @@ use std::collections::HashMap;
 
 use smpte_types::{Auid, Ul};
 
-use crate::{
-    ber::read_u16_be,
-    KlvError, MemoryTriplet,
-};
+use crate::{ber::read_u16_be, KlvError, MemoryTriplet};
 
 /// Maps 2-byte local tags to their corresponding [`Ul`] identifiers.
 pub type LocalTagRegister = HashMap<u16, Ul>;

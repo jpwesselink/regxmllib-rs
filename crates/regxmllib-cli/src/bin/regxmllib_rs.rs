@@ -166,8 +166,15 @@ fn main() -> Result<()> {
             } else {
                 RootMode::Preface
             };
-            run_regxml_dump(&dict, &labels, &input, output.as_deref(), partition, root_mode)
-                .context("RegXMLDump")
+            run_regxml_dump(
+                &dict,
+                &labels,
+                &input,
+                output.as_deref(),
+                partition,
+                root_mode,
+            )
+            .context("RegXMLDump")
         }
 
         Command::XmlRegistersToDict {
@@ -178,10 +185,18 @@ fn main() -> Result<()> {
             output,
         } => {
             let mut inputs: Vec<PathBuf> = Vec::new();
-            if let Some(p) = elements { inputs.push(p); }
-            if let Some(p) = groups   { inputs.push(p); }
-            if let Some(p) = types    { inputs.push(p); }
-            if let Some(p) = labels   { inputs.push(p); }
+            if let Some(p) = elements {
+                inputs.push(p);
+            }
+            if let Some(p) = groups {
+                inputs.push(p);
+            }
+            if let Some(p) = types {
+                inputs.push(p);
+            }
+            if let Some(p) = labels {
+                inputs.push(p);
+            }
             if inputs.is_empty() {
                 anyhow::bail!("no register XML files provided; use -e, -g, -t, -l");
             }

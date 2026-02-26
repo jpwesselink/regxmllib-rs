@@ -53,9 +53,9 @@ pub fn seek_footer_partition<R: Read + Seek>(r: &mut R) -> Result<u64, MxfError>
     r.seek(SeekFrom::Start(header_offset))?;
 
     let mut stream = KlvStream::new(&mut *r);
-    let triplet = stream
-        .read_triplet()?
-        .ok_or(MxfError::Truncated("expected header partition pack triplet"))?;
+    let triplet = stream.read_triplet()?.ok_or(MxfError::Truncated(
+        "expected header partition pack triplet",
+    ))?;
 
     let pp = PartitionPack::from_triplet(&triplet)?
         .ok_or(MxfError::Truncated("triplet is not a partition pack"))?;
