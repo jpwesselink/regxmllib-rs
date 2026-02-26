@@ -1,6 +1,6 @@
 {
   "name": "regxmllib-rs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Java-free RegXML CLI wrapper for prebuilt Rust binaries",
   "license": "MIT",
   "bin": {
@@ -13,11 +13,11 @@
     "node": ">=18"
   },
   "optionalDependencies": {
-    "regxmllib-rs-darwin-x64": "workspace:*",
-    "regxmllib-rs-darwin-arm64": "workspace:*",
-    "regxmllib-rs-linux-x64": "workspace:*",
-    "regxmllib-rs-linux-arm64": "workspace:*",
-    "regxmllib-rs-win32-x64": "workspace:*",
-    "regxmllib-rs-win32-arm64": "workspace:*"
+    "regxmllib-rs-darwin-x64": "0.1.1",
+    "regxmllib-rs-darwin-arm64": "0.1.1",
+    "regxmllib-rs-linux-x64": "0.1.1",
+    "regxmllib-rs-linux-arm64": "0.1.1",
+    "regxmllib-rs-win32-x64": "0.1.1",
+    "regxmllib-rs-win32-arm64": "0.1.1"
   }
 }
