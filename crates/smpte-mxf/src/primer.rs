@@ -8,12 +8,12 @@ use smpte_types::Ul;
 
 use crate::MxfError;
 
-/// Primer Pack key (SMPTE ST 377-1 §8.1).
+/// Primer Pack key (SMPTE ST 377-1:2011 §9.2, Table 13).
 const KEY: [u8; 16] = [
     0x06, 0x0E, 0x2B, 0x34, 0x02, 0x05, 0x01, 0x01, 0x0D, 0x01, 0x02, 0x01, 0x01, 0x05, 0x01, 0x00,
 ];
 
-/// MXF Primer Pack — maps 2-byte local tags to ULs (SMPTE ST 377-1 §8.1).
+/// MXF Primer Pack — maps 2-byte local tags to ULs (SMPTE ST 377-1:2011 §9.2, Table 13).
 #[derive(Debug, Clone)]
 pub struct PrimerPack {
     pub local_tag_register: LocalTagRegister,

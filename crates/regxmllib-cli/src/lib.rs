@@ -12,9 +12,9 @@ use smpte_types::Auid;
 // ── Embedded SMPTE registers ──────────────────────────────────────────────────
 
 const EMBEDDED_ELEMENTS: &[u8] = include_bytes!("../registers/Elements.xml");
-const EMBEDDED_GROUPS:   &[u8] = include_bytes!("../registers/Groups.xml");
-const EMBEDDED_TYPES:    &[u8] = include_bytes!("../registers/Types.xml");
-const EMBEDDED_LABELS:   &[u8] = include_bytes!("../registers/Labels.xml");
+const EMBEDDED_GROUPS: &[u8] = include_bytes!("../registers/Groups.xml");
+const EMBEDDED_TYPES: &[u8] = include_bytes!("../registers/Types.xml");
+const EMBEDDED_LABELS: &[u8] = include_bytes!("../registers/Labels.xml");
 
 // ── LabelsNamer ───────────────────────────────────────────────────────────────
 
@@ -91,8 +91,8 @@ pub fn run_regxml_dump(
     // Load labels: use embedded Labels.xml if no -l provided.
     let auid_namer: Option<Box<dyn AuidNamer>> = if label_paths.is_empty() {
         tracing::debug!("using embedded SMPTE labels");
-        let reg = LabelsRegister::from_xml(EMBEDDED_LABELS)
-            .context("loading embedded SMPTE labels")?;
+        let reg =
+            LabelsRegister::from_xml(EMBEDDED_LABELS).context("loading embedded SMPTE labels")?;
         Some(Box::new(LabelsNamer(reg)))
     } else {
         let label_paths = expand_dict_paths(label_paths)?;

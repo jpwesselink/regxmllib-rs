@@ -114,3 +114,20 @@ fn footer_partition_reachable() {
         "expected footer at offset {footer_offset}"
     );
 }
+
+/// video1.mxf writes its KLV Fill items with the RP 210 key (version byte
+/// 02h); they must be detected (ST 377-1:2011 §6.3.3).
+#[test]
+fn fill_items_detected_video1() {
+    let mut r = open("video1.mxf");
+    seek_header_partition(&mut r).expect("header partition not found");
+    let mut stream = KlvStream::new(&mut r);
+    let mut fills = 0;
+    while let Some(t) = stream.read_triplet().unwrap() {
+        if smpte_mxf::is_fill_item(&t) {
+            assert_eq!(t.key.as_ul().unwrap().as_bytes()[7], 0x02);
+            fills += 1;
+        }
+    }
+    assert_eq!(fills, 2);
+}

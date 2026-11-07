@@ -44,8 +44,10 @@ impl Ul {
         Ok(Ul(bytes))
     }
 
-    /// Compare with a 16-bit bitmask: bit N (0 = MSB of byte 0) enables byte N/2.
-    /// Used for version-agnostic comparison where bit 8 (byte 7) is the version byte.
+    /// Compare with a 16-bit byte mask, MSB-first: bit `15 - i` of `mask`
+    /// enables comparison of byte `i` (0-based). `0x8000` selects byte 0,
+    /// `0x0001` selects byte 15. For example `0xFEFF` compares every byte
+    /// except byte 7 (the version byte, "byte 8" in SMPTE 1-based numbering).
     pub fn equals_with_mask(&self, other: &Ul, mask: u16) -> bool {
         for i in 0..16usize {
             let bit = 1u16 << (15 - i);
@@ -56,9 +58,10 @@ impl Ul {
         true
     }
 
-    /// Compare ignoring byte 7 (version byte).
+    /// Compare ignoring the version byte: byte 7 0-based, "byte 8" in SMPTE
+    /// 1-based numbering (SMPTE ST 336; ST 377-1:2011 §6.3).
     pub fn equals_ignore_version(&self, other: &Ul) -> bool {
-        self.equals_with_mask(other, 0xFF7F)
+        self.equals_with_mask(other, 0xFEFF)
     }
 
     pub fn is_group_key(&self) -> bool {
@@ -91,5 +94,46 @@ impl std::fmt::Display for Ul {
 impl std::fmt::Debug for Ul {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Ul({})", self)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const FILL_V2: [u8; 16] = [
+        0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02, 0x03, 0x01, 0x02, 0x10, 0x01, 0x00, 0x00,
+        0x00,
+    ];
+
+    #[test]
+    fn mask_bit_order_is_msb_first() {
+        let a = Ul::from_bytes([0; 16]);
+        for i in 0..16 {
+            let mut b = [0u8; 16];
+            b[i] = 1;
+            let b = Ul::from_bytes(b);
+            assert!(
+                !a.equals_with_mask(&b, 0x8000 >> i),
+                "byte {i} must be compared"
+            );
+            assert!(
+                a.equals_with_mask(&b, !(0x8000u16 >> i)),
+                "byte {i} must be skipped"
+            );
+        }
+    }
+
+    #[test]
+    fn ignore_version_skips_version_byte_only() {
+        let v2 = Ul::from_bytes(FILL_V2);
+        let mut v1 = FILL_V2;
+        v1[7] = 0x01;
+        assert!(v2.equals_ignore_version(&Ul::from_bytes(v1)));
+
+        // Byte 8 (0-based; item designator) is not the version byte.
+        let mut other = FILL_V2;
+        other[8] = 0x0D;
+        assert!(!v2.equals_ignore_version(&Ul::from_bytes(other)));
     }
 }

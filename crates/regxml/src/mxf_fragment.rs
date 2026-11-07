@@ -22,13 +22,20 @@ const PREFACE_KEY_BYTES: [u8; 16] = [
     0x06, 0x0E, 0x2B, 0x34, 0x02, 0x53, 0x01, 0x01, 0x0D, 0x01, 0x01, 0x01, 0x01, 0x01, 0x2F, 0x00,
 ];
 
-// Version byte mask for UL comparison.
-const PREFACE_KEY_MASK: u16 = 0xFF7F;
+// Preface key mask: ignore byte 8 (1-based; registry version, "vvh" in
+// ST 377-1:2011 Table 16). Byte 6 is fixed at 53h for the Preface (Table 17,
+// "53h only"). MSB-first: 0x8000 selects byte 1.
+const PREFACE_KEY_MASK: u16 = 0xFEFF;
 
-// Index Table Segment key: 060e2b34.02530101.0d010201.01100100
+// Index Table Segment key (ST 377-1:2011 §11.2.2, Table 25):
+// 060e2b34.02xx0101.0d010201.01100100
 const INDEX_TABLE_KEY_BYTES: [u8; 16] = [
     0x06, 0x0E, 0x2B, 0x34, 0x02, 0x53, 0x01, 0x01, 0x0D, 0x01, 0x02, 0x01, 0x01, 0x10, 0x01, 0x00,
 ];
+
+// Index Table Segment key mask: ignore byte 6 (1-based; xxh = 13h BER or
+// 53h 2-byte local lengths, Table 25) and byte 8 (registry version).
+const INDEX_TABLE_KEY_MASK: u16 = 0xFAFF;
 
 // InstanceID property: 060e2b34.01010101.01011502.00000000
 const INSTANCE_UID_UL: [u8; 16] = [
@@ -220,18 +227,10 @@ where
 
     // Find the root set based on RootMode.
     let root = match options.root_mode {
-        RootMode::Preface => {
-            let preface_key = Ul::from_bytes(PREFACE_KEY_BYTES);
-            all_sets
-                .iter()
-                .find(|s| {
-                    s.key
-                        .as_ul()
-                        .map(|ul| ul.equals_with_mask(&preface_key, PREFACE_KEY_MASK))
-                        .unwrap_or(false)
-                })
-                .ok_or(MxfFragmentError::MissingRootObject)?
-        }
+        RootMode::Preface => all_sets
+            .iter()
+            .find(|s| s.key.as_ul().map(is_preface_key).unwrap_or(false))
+            .ok_or(MxfFragmentError::MissingRootObject)?,
         RootMode::EssenceDescriptor => find_essence_descriptor(&all_sets, dictionaries)?,
     };
 
@@ -349,6 +348,14 @@ fn find_essence_descriptor<'a, D: DefinitionResolver>(
     Err(MxfFragmentError::MissingRootObject)
 }
 
+fn is_preface_key(ul: &Ul) -> bool {
+    ul.equals_with_mask(&Ul::from_bytes(PREFACE_KEY_BYTES), PREFACE_KEY_MASK)
+}
+
+fn is_index_table_segment_key(ul: &Ul) -> bool {
+    ul.equals_with_mask(&Ul::from_bytes(INDEX_TABLE_KEY_BYTES), INDEX_TABLE_KEY_MASK)
+}
+
 fn find_primer_pack<R: Read + Seek>(
     klv: &mut KlvStream<R>,
 ) -> Result<PrimerPack, MxfFragmentError> {
@@ -372,7 +379,6 @@ fn collect_local_sets<R: Read + Seek>(
     primer: &PrimerPack,
     header_byte_count: u64,
 ) -> Result<Vec<LocalSet>, MxfFragmentError> {
-    let index_key = Ul::from_bytes(INDEX_TABLE_KEY_BYTES);
     let mut sets = Vec::new();
     let mut bytes_read: u64 = 0;
 
@@ -393,9 +399,7 @@ fn collect_local_sets<R: Read + Seek>(
         if triplet
             .key
             .as_ul()
-            .map(|ul| {
-                *ul.as_bytes() == INDEX_TABLE_KEY_BYTES || ul.equals_with_mask(&index_key, 0xFF7F)
-            })
+            .map(is_index_table_segment_key)
             .unwrap_or(false)
         {
             break;
@@ -442,4 +446,39 @@ pub enum MxfFragmentError {
     MissingPrimerPack,
     #[error("no root object found in header metadata")]
     MissingRootObject,
+}
+
+#[cfg(test)]
+mod key_tests {
+    use super::*;
+
+    #[test]
+    fn preface_key_ignores_version_byte_only() {
+        let mut k = PREFACE_KEY_BYTES;
+        k[7] = 0x02; // byte 8: registry version (vvh, ST 377-1:2011 Table 16)
+        assert!(is_preface_key(&Ul::from_bytes(k)));
+
+        let mut k = PREFACE_KEY_BYTES;
+        k[8] = 0x0E; // byte 9: item designator must match
+        assert!(!is_preface_key(&Ul::from_bytes(k)));
+
+        let mut k = PREFACE_KEY_BYTES;
+        k[5] = 0x13; // byte 6: Preface is "53h only" (Table 17)
+        assert!(!is_preface_key(&Ul::from_bytes(k)));
+    }
+
+    #[test]
+    fn index_table_segment_key_variants() {
+        // ST 377-1:2011 §11.2.2 Table 25: byte 6 is 53h or 13h.
+        let mut k = INDEX_TABLE_KEY_BYTES;
+        assert!(is_index_table_segment_key(&Ul::from_bytes(k)));
+        k[5] = 0x13;
+        assert!(is_index_table_segment_key(&Ul::from_bytes(k)));
+        k[7] = 0x02;
+        assert!(is_index_table_segment_key(&Ul::from_bytes(k)));
+
+        let mut k = INDEX_TABLE_KEY_BYTES;
+        k[8] = 0x0E; // byte 9: item designator must match
+        assert!(!is_index_table_segment_key(&Ul::from_bytes(k)));
+    }
 }
