@@ -9,12 +9,12 @@ use crate::{
     MxfError,
 };
 
-/// Maximum run-in length before the first partition pack (SMPTE ST 377-1 §6.4).
+/// Maximum run-in length before the first partition pack (SMPTE ST 377-1:2011 §6.5).
 const MAX_RUN_IN: u64 = 65536;
 
 /// Seek `r` to the start of the header partition pack key.
 ///
-/// Implements the run-in scan from SMPTE ST 377-1 §6.4: reads 16-byte windows
+/// Implements the run-in scan from SMPTE ST 377-1:2011 §6.5: reads 16-byte windows
 /// sliding forward one byte at a time until a partition pack key prefix is found.
 ///
 /// Returns the byte offset where the partition pack key starts.

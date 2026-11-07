@@ -8,7 +8,7 @@ use smpte_types::Ul;
 
 use crate::MxfError;
 
-/// Partition Pack key template (SMPTE ST 377-1 §6.5).
+/// Partition Pack key template (SMPTE ST 377-1:2011 §7.1, Table 4).
 /// Byte[12] = 0x01 (Partition Pack sub-type, always constant).
 /// Byte[13] = kind (0x02 Header / 0x03 Body / 0x04 Footer) — skipped by MASK.
 /// Byte[14] = status (0x01–0x04) — skipped by MASK.
@@ -24,7 +24,7 @@ pub const PARTITION_PACK_MASK: u16 = 0xFEF9;
 /// Compares bytes 0-6, 8-10; ignores byte 7 and bytes 11-15.
 pub const SCAN_MASK: u16 = 0xFEE0;
 
-/// The role of an MXF partition (SMPTE ST 377-1 §6.5).
+/// The role of an MXF partition (SMPTE ST 377-1:2011 §7).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PartitionKind {
     Header,
@@ -41,7 +41,7 @@ pub enum PartitionStatus {
     ClosedComplete,
 }
 
-/// Parsed MXF partition pack (SMPTE ST 377-1 §6.5).
+/// Parsed MXF partition pack (SMPTE ST 377-1:2011 §7).
 #[derive(Debug, Clone)]
 pub struct PartitionPack {
     pub kind: PartitionKind,

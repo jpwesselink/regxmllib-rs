@@ -23,7 +23,7 @@ pub struct RipEntry {
     pub byte_offset: u64,
 }
 
-/// MXF Random Index Pack — enables fast random access to partitions (ST 377-1 §11).
+/// MXF Random Index Pack — enables fast random access to partitions (ST 377-1:2011 §12).
 #[derive(Debug, Clone)]
 pub struct RandomIndexPack {
     pub entries: Vec<RipEntry>,
